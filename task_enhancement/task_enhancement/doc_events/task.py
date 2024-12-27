@@ -5,14 +5,9 @@ from frappe.utils import getdate, add_to_date
 def before_validate(self,method):
     if not self.is_new():
         self.custom_previous_status = frappe.db.get_value("Task", self.name, "status")
-    if self.status == "Planned" and (self.custom_marked_for_week_of_select_1st_day_of_the_week == None or self.custom_marked_for_week_of_select_1st_day_of_the_week == ""):
-        frappe.throw("Please specify 'Mark for Week Of' to set this task's status to Planned.")
         
     if self.status == "Scheduled" and ((self.exp_start_date == None or self.exp_start_date == "") or (self.exp_end_date == None or self.exp_end_date == "")):
         frappe.throw("Expected Start Date and Expected End Date are required to set this task's status to Scheduled.")
-    
-    if self.custom_marked_for_week_of_select_1st_day_of_the_week:
-        self.custom_allow_changing_mark_of_week = 0
     
     if self.exp_start_date:
         self.custom_allow_changing_expected_start = 0
@@ -27,13 +22,9 @@ def before_validate(self,method):
         self.custom_request_date_change = 0
         self.custom_change_required = None
         
-    if self.exp_start_date and self.exp_end_date and self.custom_marked_for_week_of_select_1st_day_of_the_week and self.status in ["Unplanned","Planned"]:
+    if self.exp_start_date and self.exp_end_date and self.status in ["Unplanned", "Open"]:
         self.db_set("workflow_state","Scheduled")
         self.db_set("status","Scheduled")
-        
-    elif (not self.exp_start_date or not self.exp_end_date) and self.custom_marked_for_week_of_select_1st_day_of_the_week and self.status in ["Unplanned"]:
-        self.db_set("workflow_state","Planned")
-        self.db_set("status","Planned")
         
     if not self.is_new():
         on_update(self,method)
@@ -79,7 +70,6 @@ def update_parent_tasks(parent_task):
             'status', 
             'exp_start_date',
             'exp_end_date',
-            'custom_marked_for_week_of_select_1st_day_of_the_week'
         ]
     )
     
@@ -100,11 +90,6 @@ def update_parent_tasks(parent_task):
         # Only update dates if all child tasks have dates
         start_dates = [getdate(task.exp_start_date) for task in child_tasks]
         end_dates = [getdate(task.exp_end_date) for task in child_tasks]
-        marked_for_week_dates = [
-            getdate(task.custom_marked_for_week_of_select_1st_day_of_the_week) 
-            for task in child_tasks 
-            if task.custom_marked_for_week_of_select_1st_day_of_the_week
-        ]
         
         # Determine parent status based on child tasks
         status_priority = {
@@ -125,8 +110,6 @@ def update_parent_tasks(parent_task):
         # Update dates
         task_doc.exp_start_date = min(start_dates)
         task_doc.exp_end_date = max(end_dates)
-        if marked_for_week_dates:
-            task_doc.custom_marked_for_week_of_select_1st_day_of_the_week = min(marked_for_week_dates)
         
         # Update status based on child tasks (use the most critical status)
         if sorted_child_tasks:

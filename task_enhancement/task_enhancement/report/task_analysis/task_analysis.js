@@ -22,12 +22,6 @@ frappe.query_reports["Task Analysis"] = {
             options: "Task"
         },
         {
-            fieldname: "custom_marked_for_week_of_select_1st_day_of_the_week",
-            label: __("Marked for week of"),
-            fieldtype: "Date",
-            description: "Select first day of week"
-        },
-        {
             fieldname: "task_owner",
             label: __("Task Owner"),
             fieldtype: "Link",
@@ -277,13 +271,6 @@ function showEditDialog(taskData, report) {
                 fieldtype: 'Date',
                 read_only: !!taskDataWithoutProgress.exp_end_date,
                 default: taskDataWithoutProgress.exp_end_date
-            },
-            {
-                label: __('Marked For Week'),
-                fieldname: 'custom_marked_for_week_of_select_1st_day_of_the_week',
-                fieldtype: 'Date',
-                read_only: !!taskDataWithoutProgress.custom_marked_for_week_of_select_1st_day_of_the_week,
-                default: taskDataWithoutProgress.custom_marked_for_week_of_select_1st_day_of_the_week
             },
             {
                 label: __('Description'),
@@ -684,7 +671,7 @@ function showTaskDialog(taskData, report) {
                 },
                 {
                     label: __('Task Owner'),
-                    fieldname: 'custom_task_owner',
+                    fieldname: 'task_owner',
                     fieldtype: 'Link',
                     options: 'User',
                     default: taskData.task_owner
@@ -704,11 +691,6 @@ function showTaskDialog(taskData, report) {
                 {
                     label: __('Expected End Date'),
                     fieldname: 'exp_end_date',
-                    fieldtype: 'Date',
-                },
-                {
-                    label: __('Marked For Week'),
-                    fieldname: 'custom_marked_for_week_of_select_1st_day_of_the_week',
                     fieldtype: 'Date',
                 },
                 {
@@ -772,7 +754,7 @@ function showTaskDialog(taskData, report) {
                         },
                         {
                             label: __('Task Owner'),
-                            fieldname: 'custom_task_owner',
+                            fieldname: 'task_owner',
                             fieldtype: 'Link',
                             options: 'User',
                             in_list_view: 1,
@@ -797,11 +779,6 @@ function showTaskDialog(taskData, report) {
                             fieldname: 'exp_end_date',
                             fieldtype: 'Date',
                             in_list_view: 1
-                        },
-                        {
-                            label: __('Marked For Week'),
-                            fieldname: 'custom_marked_for_week_of_select_1st_day_of_the_week',
-                            fieldtype: 'Date'
                         },
                         {
                             label: __('Description'),
@@ -871,11 +848,10 @@ function showTaskDialog(taskData, report) {
                     subject: values.subject,
                     parent_task: values.parent_task,
                     project: values.project,
-                    custom_task_owner: values.custom_task_owner,
+                    task_owner: values.task_owner,
                     priority: values.priority,
                     exp_start_date: values.exp_start_date,
                     exp_end_date: values.exp_end_date,
-                    custom_marked_for_week_of_select_1st_day_of_the_week: values.custom_marked_for_week_of_select_1st_day_of_the_week,
                     description: values.description
                 }
             },
@@ -918,11 +894,10 @@ function showTaskDialog(taskData, report) {
                         parent_task: values.parent_task,
                         project: values.project,
                         task: values.task,
-                        custom_task_owner: task.custom_task_owner,
+                        task_owner: task.task_owner,
                         priority: task.priority,
                         exp_start_date: task.exp_start_date,
                         exp_end_date: task.exp_end_date,
-                        custom_marked_for_week_of_select_1st_day_of_the_week: task.custom_marked_for_week_of_select_1st_day_of_the_week,
                         description: task.description
                     }
                 },

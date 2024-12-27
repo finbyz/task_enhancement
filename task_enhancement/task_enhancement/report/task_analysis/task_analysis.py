@@ -30,12 +30,6 @@ def get_columns():
             "width": 200
         },
         {
-            "fieldname": "custom_marked_for_week_of_select_1st_day_of_the_week",
-            "label": _("Marked For Week Of"),
-            "fieldtype": "Date",
-            "width": 120
-        },
-        {
             "fieldname": "exp_start_date",
             "label": _("Expected Start Date"),
             "fieldtype": "Date",
@@ -125,7 +119,7 @@ def copy_project_tasks(original_project, new_project_name, new_task_owner=None):
     # Use a more efficient query to get tasks
     original_tasks = frappe.get_list('Task', 
         filters={'project': original_project},
-        fields=['name', 'subject', 'description', 'priority', 'parent_task', 'custom_task_owner'],
+        fields=['name', 'subject', 'description', 'priority', 'parent_task', 'task_owner'],
         order_by='lft'  # Ensures parent tasks are processed before children
     )
     
@@ -153,11 +147,10 @@ def copy_project_tasks(original_project, new_project_name, new_task_owner=None):
                 'status': 'Unplanned',  # Reset status for new project
                 'priority': task.priority,
                 'project': new_project_name,
-                'custom_task_owner': new_task_owner or task.custom_task_owner,
+                'task_owner': new_task_owner or task.task_owner,
                 # Reset date fields
                 'exp_start_date': None,
                 'exp_end_date': None,
-                'custom_marked_for_week_of_select_1st_day_of_the_week': None
             }
             
             # Create new task document
@@ -212,16 +205,12 @@ def get_tasks(filters):
                 )
             """
     
-    if filters.get('custom_marked_for_week_of_select_1st_day_of_the_week'):
-        conditions.append(
-            f"custom_marked_for_week_of_select_1st_day_of_the_week = '{filters.get('custom_marked_for_week_of_select_1st_day_of_the_week')}'"
-        )
     
     if not filters.get('show_completed_tasks'):
         conditions.append("status != 'Completed'")
     
     if filters.get("task_owner"):
-        conditions.append(f"custom_task_owner = '{filters.get('task_owner')}'")
+        conditions.append(f"task_owner = '{filters.get('task_owner')}'")
     
     where_clause = " AND ".join(conditions) if conditions else "1=1"
     if task_condition:
@@ -234,7 +223,7 @@ def get_tasks(filters):
             IFNULL(parent_task, '') as parent_task,
             project,
             status,
-            custom_task_owner as task_owner,
+            task_owner as task_owner,
             priority,
             description,
             exp_start_date,
@@ -243,7 +232,6 @@ def get_tasks(filters):
                 SELECT 1 FROM `tabTask` t2 
                 WHERE t2.parent_task = `tabTask`.name
             ) THEN 1 ELSE 0 END as is_group,
-            custom_marked_for_week_of_select_1st_day_of_the_week,
             CASE 
                 WHEN parent_task IS NULL THEN 'grandparent'
                 ELSE 'child'
@@ -354,7 +342,6 @@ def prepare_data(filters, projects, tasks):
                 "status":project.status,
                 "priority": project.priority,
                 "description": "",
-                "custom_marked_for_week_of_select_1st_day_of_the_week": None,
                 "task_owner": "",
                 "indent": 0,
                 "exp_start_date": project.expected_start_date,
@@ -398,7 +385,6 @@ def prepare_data(filters, projects, tasks):
                         "priority": task.priority,
                         "description": task.description,
                         "project": task.project,
-                        "custom_marked_for_week_of_select_1st_day_of_the_week": task.custom_marked_for_week_of_select_1st_day_of_the_week,
                         "indent": level,
                         "is_group": task.is_group,
                         "is_project": task.is_project,
@@ -431,7 +417,6 @@ def add_task_to_data(data, task, parent_children_map, level, show_progress=False
         "status_show": status_display,  # Changed: Now using the formatted status
         "priority": task.priority,
         "description": task.description,
-        "custom_marked_for_week_of_select_1st_day_of_the_week": task.custom_marked_for_week_of_select_1st_day_of_the_week,
         "indent": level,
         "is_group": task.is_group,
         "is_project": task.is_project,
@@ -607,11 +592,9 @@ def update_single_task(task_name, task_data, update_description):
     if update_description:
         task.description = task_data.get('description')
     
-    task.custom_task_owner = task_data.get('task_owner')
+    task.task_owner = task_data.get('task_owner')
     task.exp_start_date = task_data.get('exp_start_date')
     task.exp_end_date = task_data.get('exp_end_date')
-    task.custom_marked_for_week_of_select_1st_day_of_the_week = task_data.get('custom_marked_for_week_of_select_1st_day_of_the_week')
-    
     # Validate task dates
     if task.exp_start_date and task.exp_end_date and task.exp_start_date > task.exp_end_date:
         frappe.throw(_("Expected End Date cannot be before Expected Start Date"))
@@ -892,16 +875,16 @@ def copy_single_task(task_name, new_project, new_task_owner, new_parent):
     new_task = frappe.new_doc('Task')
     
     # Copy all standard fields
-    exclude_fields = ['name', 'parent_task', 'project', 'custom_task_owner', 'creation', 
+    exclude_fields = ['name', 'parent_task', 'project', 'task_owner', 'creation', 
                      'modified', 'modified_by', 'owner', 'docstatus', 'idx','depends_on', 'status', 'exp_start_date'
-                     'exp_end_date', 'custom_marked_for_week_of_select_1st_day_of_the_week','workflow_state']
+                     'exp_end_date','workflow_state']
     for field in orig_task.meta.fields:
         if field.fieldname not in exclude_fields:
             new_task.set(field.fieldname, orig_task.get(field.fieldname))
     
     # Set new values
     new_task.project = new_project if new_project else None
-    new_task.custom_task_owner = new_task_owner if new_task_owner else None
+    new_task.task_owner = new_task_owner if new_task_owner else None
     new_task.parent_task = new_parent if new_parent else None
     new_task.exp_start_date = None
     new_task.exp_end_date = None
