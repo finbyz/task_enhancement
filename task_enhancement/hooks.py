@@ -1,8 +1,8 @@
 app_name = "task_enhancement"
 app_title = "Task Enhancement"
-app_publisher = "Accurate Systems"
+app_publisher = "Finbyz Tech"
 app_description = "Making Task Enhancement easier"
-app_email = "info@accuratesystems.com.sa"
+app_email = "info@finbyz.tech"
 app_license = "mit"
 
 # Apps
