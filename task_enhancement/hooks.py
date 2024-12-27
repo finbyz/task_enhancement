@@ -27,6 +27,7 @@ app_license = "mit"
 override_doctype_class = {
 	"Notification": "task_enhancement.task_enhancement.override_doctype_class.notification.Notification",
 }
+doctype_list_js = {"Task": "public/js/task_list.js"}
 # include js, css files in header of desk.html
 # app_include_css = "/assets/task_enhancement/css/task_enhancement.css"
 
